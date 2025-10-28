@@ -1,3 +1,7 @@
+package ru.practicum.kanban.manager;
+
+import ru.practicum.kanban.model.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +30,11 @@ public class TaskManager {
         return tasks.get(id);
     }
 
-    public Task createTask(Task task) {
-        task.setId(nextId++);
-        tasks.put(task.getId(), task);
-        return task;
+    public int createTask(Task task) {
+        int id = nextId++;
+        task.setId(id);
+        tasks.put(id, task);
+        return id;
     }
 
     public void updateTask(Task task) {
@@ -60,10 +65,11 @@ public class TaskManager {
         return epics.get(id);
     }
 
-    public Epic createEpic(Epic epic) {
-        epic.setId(nextId++);
-        epics.put(epic.getId(), epic);
-        return epic;
+    public int createEpic(Epic epic) {
+        int id = nextId++;
+        epic.setId(id);
+        epics.put(id, epic);
+        return id;
     }
 
     public void updateEpic(Epic epic) {
@@ -71,8 +77,7 @@ public class TaskManager {
             Epic existingEpic = epics.get(epic.getId());
             existingEpic.setTitle(epic.getTitle());
             existingEpic.setDescription(epic.getDescription());
-            // Статус эпика рассчитывается автоматически
-            updateEpicStatus(existingEpic.getId());
+            // статус не пересчитываем - подзадачи не менялись
         }
     }
 
@@ -101,24 +106,29 @@ public class TaskManager {
         return subtasks.get(id);
     }
 
-    public Subtask createSubtask(Subtask subtask) {
-        subtask.setId(nextId++);
-        subtasks.put(subtask.getId(), subtask);
-
-        // Добавляем подзадачу в эпик
+    /**
+     * Возвращает id созданной подзадачи, либо -1, если эпик не найден
+     */
+    public int createSubtask(Subtask subtask) {
+        // Проверяем, что указан корректный epicId и эпик существует
         Epic epic = epics.get(subtask.getEpicId());
-        if (epic != null) {
-            epic.addSubtaskId(subtask.getId());
-            updateEpicStatus(epic.getId());
+        if (epic == null) {
+            // Если эпика нет - ничего не делаем
+            return -1;
         }
 
-        return subtask;
+        int id = nextId++;
+        subtask.setId(id);
+        subtasks.put(id, subtask);
+
+        epic.addSubtaskId(id);
+        updateEpicStatus(epic.getId());
+        return id;
     }
 
     public void updateSubtask(Subtask subtask) {
         if (subtasks.containsKey(subtask.getId())) {
             subtasks.put(subtask.getId(), subtask);
-            // Обновляем статус эпика
             updateEpicStatus(subtask.getEpicId());
         }
     }
