@@ -2,6 +2,9 @@ package ru.practicum.kanban.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaskTest {
@@ -59,5 +62,25 @@ class TaskTest {
         epic2.setId(1);
 
         assertEquals(epic1, epic2, "Эпики с одинаковым ID должны быть равны");
+    }
+
+    @Test
+    void taskDurationAndStartTimeStored() {
+        Task task = new Task("T", "D", Status.NEW);
+        assertNull(task.getDuration());
+        assertNull(task.getStartTime());
+        task.setDuration(Duration.ofMinutes(30));
+        task.setStartTime(LocalDateTime.of(2025, 2, 20, 10, 0));
+        assertEquals(Duration.ofMinutes(30), task.getDuration());
+        assertEquals(LocalDateTime.of(2025, 2, 20, 10, 0), task.getStartTime());
+    }
+
+    @Test
+    void taskGetEndTimeFromStartAndDuration() {
+        Task task = new Task("T", "D", Status.NEW);
+        assertNull(task.getEndTime());
+        task.setStartTime(LocalDateTime.of(2025, 2, 20, 10, 0));
+        task.setDuration(Duration.ofMinutes(45));
+        assertEquals(LocalDateTime.of(2025, 2, 20, 10, 45), task.getEndTime());
     }
 }

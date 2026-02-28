@@ -2,6 +2,9 @@ package ru.practicum.kanban.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubtaskTest {
@@ -122,5 +125,14 @@ class SubtaskTest {
         subtask.setStatus(Status.DONE);
 
         assertEquals(5, subtask.getEpicId());
+    }
+
+    @Test
+    void subtaskDurationAndStartTimeInherited() {
+        Subtask subtask = new Subtask("S", "D", Status.NEW, 1);
+        subtask.setDuration(Duration.ofMinutes(60));
+        subtask.setStartTime(LocalDateTime.of(2025, 2, 20, 12, 0));
+        assertEquals(Duration.ofMinutes(60), subtask.getDuration());
+        assertEquals(LocalDateTime.of(2025, 2, 20, 13, 0), subtask.getEndTime());
     }
 }
