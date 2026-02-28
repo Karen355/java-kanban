@@ -190,7 +190,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    private void updateEpicStatus(int epicId) {
+    protected void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) return;
 
@@ -222,5 +222,25 @@ public class InMemoryTaskManager implements TaskManager {
         } else {
             epic.setStatus(Status.IN_PROGRESS);
         }
+    }
+
+    protected void restoreTask(Task task) {
+        tasks.put(task.getId(), task);
+    }
+
+    protected void restoreEpic(Epic epic) {
+        epics.put(epic.getId(), epic);
+    }
+
+    protected void restoreSubtask(Subtask subtask) {
+        subtasks.put(subtask.getId(), subtask);
+        Epic epic = epics.get(subtask.getEpicId());
+        if (epic != null) {
+            epic.addSubtaskId(subtask.getId());
+        }
+    }
+
+    protected void setNextId(int id) {
+        nextId = id;
     }
 }
