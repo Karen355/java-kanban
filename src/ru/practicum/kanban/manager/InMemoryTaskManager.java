@@ -34,8 +34,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
-        tasks.keySet().forEach(historyManager::remove);
-        tasks.values().stream().filter(t -> t.getStartTime() != null).forEach(prioritizedTasks::remove);
+        for (Task t : tasks.values()) {
+            historyManager.remove(t.getId());
+            if (t.getStartTime() != null) prioritizedTasks.remove(t);
+        }
         tasks.clear();
     }
 
@@ -50,13 +52,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createTask(Task task) {
-        if (task.getStartTime() != null && task.getEndTime() != null && taskOverlapsAny(task, getPrioritizedTasks())) {
+        if (task.getStartTime() != null && task.getEndTime() != null && taskOverlapsAny(task)) {
             return -1;
         }
         int id = nextId++;
         task.setId(id);
         tasks.put(id, task);
-        if (task.getStartTime() != null) prioritizedTasks.add(task);
+        addToPrioritizedIfNeeded(task);
         return id;
     }
 
@@ -65,12 +67,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (!tasks.containsKey(task.getId())) return;
         Task existing = tasks.get(task.getId());
         if (existing.getStartTime() != null) prioritizedTasks.remove(existing);
-        if (task.getStartTime() != null && task.getEndTime() != null && taskOverlapsAny(task, getPrioritizedTasks())) {
-            if (existing.getStartTime() != null) prioritizedTasks.add(existing);
+        if (task.getStartTime() != null && task.getEndTime() != null && taskOverlapsAny(task)) {
+            addToPrioritizedIfNeeded(existing);
             return;
         }
         tasks.put(task.getId(), task);
-        if (task.getStartTime() != null) prioritizedTasks.add(task);
+        addToPrioritizedIfNeeded(task);
     }
 
     @Override
@@ -166,13 +168,13 @@ public class InMemoryTaskManager implements TaskManager {
     public int createSubtask(Subtask subtask) {
         Epic epic = epics.get(subtask.getEpicId());
         if (epic == null) return -1;
-        if (subtask.getStartTime() != null && subtask.getEndTime() != null && taskOverlapsAny(subtask, getPrioritizedTasks())) {
+        if (subtask.getStartTime() != null && subtask.getEndTime() != null && taskOverlapsAny(subtask)) {
             return -1;
         }
         int id = nextId++;
         subtask.setId(id);
         subtasks.put(id, subtask);
-        if (subtask.getStartTime() != null) prioritizedTasks.add(subtask);
+        addToPrioritizedIfNeeded(subtask);
         epic.addSubtaskId(id);
         updateEpicStatus(epic.getId());
         return id;
@@ -183,12 +185,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (!subtasks.containsKey(subtask.getId())) return;
         Subtask existing = subtasks.get(subtask.getId());
         if (existing.getStartTime() != null) prioritizedTasks.remove(existing);
-        if (subtask.getStartTime() != null && subtask.getEndTime() != null && taskOverlapsAny(subtask, getPrioritizedTasks())) {
-            if (existing.getStartTime() != null) prioritizedTasks.add(existing);
+        if (subtask.getStartTime() != null && subtask.getEndTime() != null && taskOverlapsAny(subtask)) {
+            addToPrioritizedIfNeeded(existing);
             return;
         }
         subtasks.put(subtask.getId(), subtask);
-        if (subtask.getStartTime() != null) prioritizedTasks.add(subtask);
+        addToPrioritizedIfNeeded(subtask);
         updateEpicStatus(subtask.getEpicId());
     }
 
@@ -236,8 +238,8 @@ public class InMemoryTaskManager implements TaskManager {
         return startA.isBefore(endB) && endA.isAfter(startB);
     }
 
-    protected boolean taskOverlapsAny(Task task, List<Task> others) {
-        return others.stream().anyMatch(o -> o.getId() != task.getId() && tasksOverlap(task, o));
+    protected boolean taskOverlapsAny(Task task) {
+        return prioritizedTasks.stream().anyMatch(o -> o.getId() != task.getId() && tasksOverlap(task, o));
     }
 
     /**
@@ -293,14 +295,19 @@ public class InMemoryTaskManager implements TaskManager {
             epic.setEndTime(null);
             return;
         }
-        long totalMinutes = subs.stream()
-                .map(Subtask::getDuration)
-                .filter(Objects::nonNull)
-                .mapToLong(Duration::toMinutes)
-                .sum();
+        long totalMinutes = 0;
+        LocalDateTime minStart = null;
+        LocalDateTime maxEnd = null;
+        for (Subtask sub : subs) {
+            if (sub.getDuration() != null) totalMinutes += sub.getDuration().toMinutes();
+            LocalDateTime st = sub.getStartTime();
+            if (st != null) minStart = minStart == null ? st : (st.isBefore(minStart) ? st : minStart);
+            LocalDateTime et = sub.getEndTime();
+            if (et != null) maxEnd = maxEnd == null ? et : (et.isAfter(maxEnd) ? et : maxEnd);
+        }
         epic.setDuration(Duration.ofMinutes(totalMinutes));
-        epic.setStartTime(subs.stream().map(Subtask::getStartTime).filter(Objects::nonNull).min(LocalDateTime::compareTo).orElse(null));
-        epic.setEndTime(subs.stream().map(Subtask::getEndTime).filter(Objects::nonNull).max(LocalDateTime::compareTo).orElse(null));
+        epic.setStartTime(minStart);
+        epic.setEndTime(maxEnd);
     }
 
     protected void restoreTask(Task task) {
