@@ -1,10 +1,15 @@
 package ru.practicum.kanban.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Task {
     protected int id;
     protected String title;
     protected String description;
     protected Status status;
+    protected Duration duration;
+    protected LocalDateTime startTime;
 
     public Task(String title, String description, Status status) {
         this.title = title;
@@ -44,6 +49,30 @@ public class Task {
         this.status = status;
     }
 
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    /**
+     * Дата и время завершения (startTime + duration). null, если startTime или duration не заданы.
+     */
+    public LocalDateTime getEndTime() {
+        if (startTime == null || duration == null) return null;
+        return startTime.plus(duration);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -64,6 +93,8 @@ public class Task {
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", duration=" + duration +
+                ", startTime=" + startTime +
                 '}';
     }
 }

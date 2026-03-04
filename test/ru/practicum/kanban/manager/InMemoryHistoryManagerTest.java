@@ -39,6 +39,13 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
+    void shouldReturnEmptyHistoryWhenNoTasksViewed() {
+        List<Task> history = historyManager.getHistory();
+        assertNotNull(history);
+        assertTrue(history.isEmpty());
+    }
+
+    @Test
     void shouldNotContainDuplicatesAndKeepLastView() {
         Task task1 = new Task("Task 1", "Description", Status.NEW);
         task1.setId(1);
@@ -86,6 +93,42 @@ class InMemoryHistoryManagerTest {
         assertEquals(2, history.size());
         assertEquals(task1, history.get(0));
         assertEquals(task3, history.get(1));
+    }
+
+    @Test
+    void shouldRemoveFromStartOfHistory() {
+        Task t1 = new Task("1", "D", Status.NEW);
+        t1.setId(1);
+        Task t2 = new Task("2", "D", Status.NEW);
+        t2.setId(2);
+        Task t3 = new Task("3", "D", Status.NEW);
+        t3.setId(3);
+        historyManager.add(t1);
+        historyManager.add(t2);
+        historyManager.add(t3);
+        historyManager.remove(1);
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(2, history.get(0).getId());
+        assertEquals(3, history.get(1).getId());
+    }
+
+    @Test
+    void shouldRemoveFromEndOfHistory() {
+        Task t1 = new Task("1", "D", Status.NEW);
+        t1.setId(1);
+        Task t2 = new Task("2", "D", Status.NEW);
+        t2.setId(2);
+        Task t3 = new Task("3", "D", Status.NEW);
+        t3.setId(3);
+        historyManager.add(t1);
+        historyManager.add(t2);
+        historyManager.add(t3);
+        historyManager.remove(3);
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(1, history.get(0).getId());
+        assertEquals(2, history.get(1).getId());
     }
 
     @Test

@@ -2,6 +2,7 @@ package ru.practicum.kanban.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -123,5 +124,14 @@ class EpicTest {
         assertEquals(3, (int) subtaskIds.get(0));
         assertEquals(1, (int) subtaskIds.get(1));
         assertEquals(2, (int) subtaskIds.get(2));
+    }
+
+    @Test
+    void getEndTimeShouldReturnSetValue() {
+        Epic epic = new Epic("E", "D");
+        assertNull(epic.getEndTime());
+        LocalDateTime end = LocalDateTime.of(2025, 2, 20, 14, 0);
+        epic.setEndTime(end);
+        assertEquals(end, epic.getEndTime());
     }
 }

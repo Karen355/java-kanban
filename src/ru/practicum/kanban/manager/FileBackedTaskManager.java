@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +22,7 @@ import java.util.List;
  */
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
-    private static final String CSV_HEADER = "id,type,name,status,description,epic";
+    private static final String CSV_HEADER = "id,type,name,status,description,epic,durationMinutes,startTime";
 
     private final File file;
 
@@ -37,7 +40,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public int createTask(Task task) {
         int id = super.createTask(task);
-        save();
+        if (id != -1) save();
         return id;
     }
 
@@ -87,7 +90,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public int createSubtask(Subtask subtask) {
         int id = super.createSubtask(subtask);
-        save();
+        if (id != -1) save();
         return id;
     }
 
@@ -133,13 +136,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else {
             type = TaskType.TASK;
         }
+        String durationStr = task.getDuration() != null ? String.valueOf(task.getDuration().toMinutes()) : "";
+        String startTimeStr = task.getStartTime() != null ? task.getStartTime().toString() : "";
         return String.join(",",
                 String.valueOf(task.getId()),
                 type.name(),
                 task.getTitle(),
                 task.getStatus().name(),
                 task.getDescription(),
-                epicId
+                epicId,
+                durationStr,
+                startTimeStr
         );
     }
 
@@ -154,11 +161,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Status status = Status.valueOf(parts[3].trim());
         String description = parts[4].trim();
         String epicPart = parts.length > 5 ? parts[5].trim() : "";
+        Duration duration = null;
+        if (parts.length > 6 && !parts[6].trim().isEmpty()) {
+            try {
+                duration = Duration.ofMinutes(Long.parseLong(parts[6].trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        LocalDateTime startTime = null;
+        if (parts.length > 7 && !parts[7].trim().isEmpty()) {
+            try {
+                startTime = LocalDateTime.parse(parts[7].trim());
+            } catch (DateTimeParseException ignored) {
+            }
+        }
 
         switch (type) {
             case TASK:
                 Task task = new Task(name, description, status);
                 task.setId(id);
+                task.setDuration(duration);
+                task.setStartTime(startTime);
                 return task;
             case EPIC:
                 Epic epic = new Epic(name, description);
@@ -166,9 +189,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 epic.setStatus(status);
                 return epic;
             case SUBTASK:
-                int epicId = Integer.parseInt(epicPart);
+                int epicId = epicPart.isEmpty() ? 0 : Integer.parseInt(epicPart);
                 Subtask subtask = new Subtask(name, description, status, epicId);
                 subtask.setId(id);
+                subtask.setDuration(duration);
+                subtask.setStartTime(startTime);
                 return subtask;
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
@@ -215,9 +240,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
         for (Task t : tasks) {
             manager.restoreTask(t);
+            manager.addToPrioritizedIfNeeded(t);
         }
         for (Task t : subtasks) {
             manager.restoreSubtask((Subtask) t);
+            manager.addToPrioritizedIfNeeded(t);
         }
         for (Epic epic : manager.getAllEpics()) {
             manager.updateEpicStatus(epic.getId());
