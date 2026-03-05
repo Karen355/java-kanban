@@ -104,7 +104,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         assertEquals(taskManager.getTaskById(taskId).getTitle(), loaded.getTaskById(taskId).getTitle());
         assertEquals(taskManager.getEpicById(epicId).getSubtaskIds(), loaded.getEpicById(epicId).getSubtaskIds());
         loaded.deleteTaskById(taskId);
-        assertNull(loaded.getTaskById(taskId));
+        assertThrows(NotFoundException.class, () -> loaded.getTaskById(taskId));
         assertTrue(loaded.getAllTasks().isEmpty());
     }
 
