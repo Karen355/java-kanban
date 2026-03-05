@@ -47,4 +47,9 @@ public interface TaskManager {
     List<Subtask> getSubtasksByEpicId(int epicId);
 
     List<Task> getHistory();
+
+    /**
+     * Задачи и подзадачи, отсортированные по startTime (приоритет). Эпики не входят.
+     */
+    List<Task> getPrioritizedTasks();
 }
