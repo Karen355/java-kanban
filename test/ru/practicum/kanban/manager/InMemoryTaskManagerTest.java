@@ -1,6 +1,7 @@
 package ru.practicum.kanban.manager;
 
 import org.junit.jupiter.api.Test;
+import ru.practicum.kanban.exception.NotFoundException;
 import ru.practicum.kanban.model.*;
 
 import java.util.List;
@@ -97,6 +98,7 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         Task retrieved = taskManager.getTaskById(taskId);
         retrieved.setId(999);
         assertNotNull(taskManager.getTaskById(taskId), "Менеджер хранит задачу по старому id");
-        assertNull(taskManager.getTaskById(999), "По новому id задача не найдена - данные становятся несогласованными");
+        assertThrows(NotFoundException.class, () -> taskManager.getTaskById(999),
+                "По новому id задача не найдена - данные становятся несогласованными");
     }
 }

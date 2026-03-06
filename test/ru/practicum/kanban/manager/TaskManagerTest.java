@@ -2,6 +2,8 @@ package ru.practicum.kanban.manager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.practicum.kanban.exception.NotFoundException;
+import ru.practicum.kanban.exception.TaskOverlapException;
 import ru.practicum.kanban.model.*;
 
 import java.time.Duration;
@@ -58,8 +60,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldNotAddSubtaskWithInvalidEpic() {
         Subtask subtask = new Subtask("Subtask", "Description", Status.NEW, 999);
-        int subtaskId = taskManager.createSubtask(subtask);
-        assertEquals(-1, subtaskId, "Подзадача не должна быть создана с несуществующим эпиком");
+        assertThrows(NotFoundException.class, () -> taskManager.createSubtask(subtask),
+                "Подзадача не должна быть создана с несуществующим эпиком");
     }
 
     @Test
@@ -174,8 +176,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task t2 = new Task("T2", "D", Status.NEW);
         t2.setStartTime(LocalDateTime.of(2025, 2, 20, 10, 30));
         t2.setDuration(Duration.ofMinutes(60));
-        int id2 = taskManager.createTask(t2);
-        assertEquals(-1, id2, "Пересекающаяся задача не должна быть создана");
+        assertThrows(TaskOverlapException.class, () -> taskManager.createTask(t2),
+                "Пересекающаяся задача не должна быть создана");
     }
 
     @Test
