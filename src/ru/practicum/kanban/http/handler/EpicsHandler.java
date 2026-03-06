@@ -6,7 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.practicum.kanban.http.ApiPath;
 import ru.practicum.kanban.http.HttpMethod;
-import ru.practicum.kanban.manager.NotFoundException;
+import ru.practicum.kanban.exception.NotFoundException;
 import ru.practicum.kanban.manager.TaskManager;
 import ru.practicum.kanban.model.Epic;
 import ru.practicum.kanban.model.Subtask;
@@ -61,10 +61,11 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
                 }
                 if (epic.getId() == 0) {
                     manager.createEpic(epic);
+                    sendCreated(exchange, gson.toJson(epic));
                 } else {
                     manager.updateEpic(epic);
+                    sendText(exchange, gson.toJson(epic));
                 }
-                sendCreated(exchange, gson.toJson(epic));
                 return;
             }
 

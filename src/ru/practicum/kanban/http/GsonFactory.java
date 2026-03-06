@@ -190,10 +190,14 @@ public final class GsonFactory {
         @Override
         public Status deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            if (json.isJsonNull() || json.getAsString().isEmpty()) {
-                return null;
+            if (json == null || json.isJsonNull()) {
+                throw new JsonParseException("status обязателен и не может быть null");
             }
-            return Status.valueOf(json.getAsString());
+            String value = json.getAsString();
+            if (value == null || value.isEmpty()) {
+                throw new JsonParseException("status обязателен и не может быть пустой строкой");
+            }
+            return Status.valueOf(value);
         }
     }
 }

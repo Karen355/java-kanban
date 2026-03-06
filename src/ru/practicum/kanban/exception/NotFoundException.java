@@ -1,4 +1,4 @@
-package ru.practicum.kanban.manager;
+package ru.practicum.kanban.exception;
 
 /**
  * Исключение при обращении к несуществующему ресурсу (задача, подзадача, эпик).

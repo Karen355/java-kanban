@@ -73,7 +73,7 @@ class HttpTaskManagerTasksTest {
         List<Task> tasksFromManager = manager.getAllTasks();
         assertNotNull(tasksFromManager);
         assertEquals(1, tasksFromManager.size());
-        assertEquals("Test 2", tasksFromManager.get(0).getTitle());
+        assertEquals("Test 2", tasksFromManager.getFirst().getTitle());
     }
 
     @Test
@@ -118,7 +118,7 @@ class HttpTaskManagerTasksTest {
                 .header("Content-Type", "application/json")
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        assertEquals(201, response.statusCode());
+        assertEquals(200, response.statusCode());
 
         Task saved = manager.getTaskById(id);
         assertEquals("Updated", saved.getTitle());

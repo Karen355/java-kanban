@@ -6,8 +6,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.practicum.kanban.http.ApiPath;
 import ru.practicum.kanban.http.HttpMethod;
-import ru.practicum.kanban.manager.NotFoundException;
-import ru.practicum.kanban.manager.TaskOverlapException;
+import ru.practicum.kanban.exception.NotFoundException;
+import ru.practicum.kanban.exception.TaskOverlapException;
 import ru.practicum.kanban.manager.TaskManager;
 import ru.practicum.kanban.model.Subtask;
 
@@ -51,10 +51,11 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
                 }
                 if (subtask.getId() == 0) {
                     manager.createSubtask(subtask);
+                    sendCreated(exchange, gson.toJson(subtask));
                 } else {
                     manager.updateSubtask(subtask);
+                    sendText(exchange, gson.toJson(subtask));
                 }
-                sendCreated(exchange, gson.toJson(subtask));
                 return;
             }
 
@@ -68,12 +69,10 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
             }
 
             sendNotFound(exchange);
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | JsonParseException e) {
             sendNotFound(exchange);
         } catch (TaskOverlapException e) {
             sendHasInteractions(exchange);
-        } catch (JsonParseException e) {
-            sendNotFound(exchange);
         } catch (Exception e) {
             sendInternalError(exchange);
         }

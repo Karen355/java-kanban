@@ -1,4 +1,4 @@
-package ru.practicum.kanban.manager;
+package ru.practicum.kanban.exception;
 
 /**
  * Исключение при создании или обновлении задачи, пересекающейся по времени с существующими.
