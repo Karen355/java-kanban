@@ -2,6 +2,7 @@ package ru.practicum.kanban.manager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.practicum.kanban.exception.NotFoundException;
 import ru.practicum.kanban.model.Epic;
 import ru.practicum.kanban.model.Status;
 import ru.practicum.kanban.model.Subtask;
@@ -104,7 +105,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         assertEquals(taskManager.getTaskById(taskId).getTitle(), loaded.getTaskById(taskId).getTitle());
         assertEquals(taskManager.getEpicById(epicId).getSubtaskIds(), loaded.getEpicById(epicId).getSubtaskIds());
         loaded.deleteTaskById(taskId);
-        assertNull(loaded.getTaskById(taskId));
+        assertThrows(NotFoundException.class, () -> loaded.getTaskById(taskId));
         assertTrue(loaded.getAllTasks().isEmpty());
     }
 
